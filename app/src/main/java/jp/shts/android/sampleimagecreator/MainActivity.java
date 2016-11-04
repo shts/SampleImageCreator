@@ -245,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Throwable e) {
-
+                        Toast.makeText(MainActivity.this, "エラーが発生しました", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
