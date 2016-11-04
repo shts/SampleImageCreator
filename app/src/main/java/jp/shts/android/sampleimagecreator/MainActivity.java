@@ -11,7 +11,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -192,7 +191,6 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.edit_created_sample_images_date)
     void onClickChangeImageDateButton() {
         // Show date picker
-        final ZonedDateTime localDateTime = LocalDateTime.now().atZone(ZoneId.systemDefault());
         final DatePickerDialog dialog = new DatePickerDialog(this, R.style.Theme_SampleImage_Dialog_Alert,
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
@@ -201,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                         dateTextView.setText(createDateDescriptionText());
                     }
                 },
-                localDateTime.getYear(), localDateTime.getMonthValue() - 1, localDateTime.getDayOfMonth());
+                target.getYear(), target.getMonthValue() - 1, target.getDayOfMonth());
         dialog.show();
     }
 
@@ -238,7 +236,6 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(new Subscriber<Pair<String, Uri>>() {
                     @Override
                     public void onCompleted() {
-                        Log.d(TAG, "onCompleted: ");
                         progressDialog.dismiss();
                         Toast.makeText(MainActivity.this, "作成が完了しました", Toast.LENGTH_SHORT).show();
                     }
@@ -250,7 +247,6 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onNext(Pair<String, Uri> stringUriPair) {
-                        Log.d(TAG, "onNext: ");
                     }
                 }));
     }
