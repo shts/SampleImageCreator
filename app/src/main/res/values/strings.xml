@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">画像かんたん作成</string>
+    <string name="need_write_external_permission">このアプリはストレージへの書き込み権限が必要です。</string>
+</resources>
