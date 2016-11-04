@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
-import android.preference.PreferenceManager;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -43,8 +42,6 @@ import permissions.dispatcher.OnShowRationale;
 import permissions.dispatcher.PermissionRequest;
 import permissions.dispatcher.RuntimePermissions;
 
-import static java.security.AccessController.getContext;
-
 @RuntimePermissions
 public class MainActivity extends AppCompatActivity {
 
@@ -77,10 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int size = 10;
 
-    private static final String KEY_ENABLE_BACKGROUND_COLOR = "key_background_color_enable";
-    private static final String KEY_ENABLE_TEXT_COLOR = "key_text_color_enable";
-    private static final String KEY_BACKGROUND_COLOR = "key_background_color";
-    private static final String KEY_TEXT_COLOR = "key_text_color";
+    private Store store;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -88,40 +82,36 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        store = new Store(this);
+
         target = LocalDateTime.now().atZone(ZoneId.systemDefault());
         dateTextView.setText(createDateDescriptionText());
 
         // 背景色設定
-        boolean isCheckedBackgroundSwitch = PreferenceManager
-                .getDefaultSharedPreferences(MainActivity.this)
-                .getBoolean(KEY_ENABLE_BACKGROUND_COLOR, false);
+        boolean isCheckedBackgroundSwitch = store.checkedBackgroundColor();
         backgroundColorSwitch.setChecked(isCheckedBackgroundSwitch);
         backgroundColorSettingsContainer.setVisibility(isCheckedBackgroundSwitch ? View.VISIBLE : View.GONE);
         backgroundColorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 backgroundColorSettingsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-                PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
-                        .edit().putBoolean(KEY_ENABLE_BACKGROUND_COLOR, isChecked).apply();
+                store.checkedBackgroundColor(isChecked);
             }
         });
 
         // 文字色設定
-        boolean isCheckedTextSwitch = PreferenceManager
-                .getDefaultSharedPreferences(MainActivity.this)
-                .getBoolean(KEY_ENABLE_TEXT_COLOR, false);
+        boolean isCheckedTextSwitch = store.checkedTextColor();
         textColorSwitch.setChecked(isCheckedTextSwitch);
         textColorSettingsContainer.setVisibility(isCheckedTextSwitch ? View.VISIBLE : View.GONE);
         textColorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 textColorSettingsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-                PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
-                        .edit().putBoolean(KEY_ENABLE_TEXT_COLOR, isChecked).apply();
+                store.checkedTextColor(isChecked);
             }
         });
 
-        int colorBackground = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).getInt(KEY_BACKGROUND_COLOR, -1);
+        int colorBackground = store.backgroundColor();
         if (colorBackground != -1) {
             colorPreviewBackground.setBackgroundColor(colorBackground);
         } else {
@@ -288,10 +278,11 @@ public class MainActivity extends AppCompatActivity {
                         if (positiveResult) {
                             Toast.makeText(MainActivity.this, "Color selected: #" + Integer.toHexString(color).toUpperCase(), Toast.LENGTH_SHORT).show();
                             view.setBackgroundColor(color);
-                            String key = view.getId() == R.id.edit_created_sample_images_background_color ?
-                                    KEY_BACKGROUND_COLOR : KEY_TEXT_COLOR;
-                            PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
-                                    .edit().putInt(key, color).apply();
+                            if (view.getId() == R.id.edit_created_sample_images_background_color) {
+                                store.backgroundColor(color);
+                            } else {
+                                store.textColor(color);
+                            }
 
                         } else {
                             Toast.makeText(MainActivity.this, "Dialog cancelled", Toast.LENGTH_SHORT).show();
