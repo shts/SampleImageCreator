@@ -26,11 +26,6 @@ public class SimpleImageCreator extends Creator {
         colors = new Colors(context);
     }
 
-    public SimpleImageCreator(@NonNull Context context, OnCreateListener listener) {
-        super(context, listener);
-        colors = new Colors(context);
-    }
-
     @Override
     protected Bitmap createBaseBitmap() {
         return Bitmap.createBitmap(IMAGE_WIDTH, IMAGE_HEIGHT, Bitmap.Config.ARGB_8888);

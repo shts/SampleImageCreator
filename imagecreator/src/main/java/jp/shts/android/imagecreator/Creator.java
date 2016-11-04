@@ -7,6 +7,7 @@ import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v4.util.Pair;
 
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.format.DateTimeFormatter;
@@ -17,50 +18,90 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Locale;
 
+import rx.Observable;
+import rx.Subscriber;
+import rx.functions.Func1;
+
 public abstract class Creator {
 
-    public interface OnCreateListener {
-        void onStartCreateImage();
-
-        void onFinishCreateImage(String path, Uri uri);
-    }
-
-    private OnCreateListener listener;
     private Context context;
+    private int bulkCounter = 0;
 
     public Creator(@NonNull Context context) {
         this.context = context;
     }
 
-    public Creator(@NonNull Context context, OnCreateListener listener) {
-        this.context = context;
-        this.listener = listener;
-    }
-
-    public void create() {
-        if (listener != null) listener.onStartCreateImage();
-
-        Bitmap bitmap = createBaseBitmap();
-        Canvas canvas = (bitmap == null) ? new Canvas() : new Canvas(bitmap);
-        decorate(canvas);
-
-        final File f = createOutputFile();
-        saveBitmap(bitmap, f);
-        addDateTimeAsExif(f);
-
-        MediaScannerConnection.scanFile(
-                context, new String[]{f.getAbsolutePath()}, null, new MediaScannerConnection.OnScanCompletedListener() {
+    public Observable<Pair<String, Uri>> create() {
+        return Observable.just("").flatMap(new Func1<String, Observable<Pair<String, Uri>>>() {
+            @Override
+            public Observable<Pair<String, Uri>> call(String s) {
+                return Observable.create(new Observable.OnSubscribe<Pair<String, Uri>>() {
                     @Override
-                    public void onScanCompleted(String path, Uri uri) {
-                        if (listener != null) listener.onFinishCreateImage(path, uri);
+                    public void call(final Subscriber<? super Pair<String, Uri>> subscriber) {
+                        try {
+                            Bitmap bitmap = createBaseBitmap();
+                            Canvas canvas = (bitmap == null) ? new Canvas() : new Canvas(bitmap);
+                            decorate(canvas);
+
+                            final File f = createOutputFile();
+                            saveBitmap(bitmap, f);
+                            addDateTimeAsExif(f);
+
+                            MediaScannerConnection.scanFile(
+                                    context, new String[]{f.getAbsolutePath()}, null, new MediaScannerConnection.OnScanCompletedListener() {
+                                        @Override
+                                        public void onScanCompleted(String path, Uri uri) {
+                                            subscriber.onNext(new Pair<>(path, uri));
+                                            subscriber.onCompleted();
+                                        }
+                                    });
+                        } catch (Throwable e) {
+                            subscriber.onError(e);
+                        }
                     }
                 });
+            }
+        });
     }
 
-    public void bulkCreate() {
-        for (int i = 0; i < getBulkCreateSize(); i++) {
-            create();
-        }
+    public Observable<Pair<String, Uri>> bulkCreate() {
+        return Observable.just("").flatMap(new Func1<String, Observable<Pair<String, Uri>>>() {
+            @Override
+            public Observable<Pair<String, Uri>> call(String s) {
+                return Observable.create(new Observable.OnSubscribe<Pair<String, Uri>>() {
+                    @Override
+                    public void call(final Subscriber<? super Pair<String, Uri>> subscriber) {
+                        try {
+                            final int bulkSize = getBulkCreateSize();
+                            bulkCounter = 0;
+                            for (int i = 0; i < bulkSize; i++) {
+                                Bitmap bitmap = createBaseBitmap();
+                                Canvas canvas = (bitmap == null) ? new Canvas() : new Canvas(bitmap);
+                                decorate(canvas);
+
+                                final File f = createOutputFile();
+                                saveBitmap(bitmap, f);
+                                addDateTimeAsExif(f);
+
+                                MediaScannerConnection.scanFile(
+                                        context, new String[]{f.getAbsolutePath()}, null, new MediaScannerConnection.OnScanCompletedListener() {
+                                            @Override
+                                            public void onScanCompleted(String path, Uri uri) {
+                                                subscriber.onNext(new Pair<>(path, uri));
+                                                bulkCounter++;
+                                                if (bulkSize <= bulkCounter) {
+                                                    subscriber.onCompleted();
+                                                }
+                                            }
+                                        });
+                            }
+                        } catch (Throwable e) {
+                            subscriber.onError(e);
+                        }
+                    }
+                });
+            }
+        });
     }
 
     private boolean saveBitmap(@NonNull Bitmap bitmap, @NonNull File file) {

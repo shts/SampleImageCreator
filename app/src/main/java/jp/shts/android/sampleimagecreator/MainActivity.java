@@ -5,12 +5,13 @@ import android.app.DatePickerDialog;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -33,7 +34,6 @@ import java.util.Locale;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import jp.shts.android.imagecreator.Creator;
 import jp.shts.android.imagecreator.SimpleImageCreator;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnNeverAskAgain;
@@ -41,6 +41,10 @@ import permissions.dispatcher.OnPermissionDenied;
 import permissions.dispatcher.OnShowRationale;
 import permissions.dispatcher.PermissionRequest;
 import permissions.dispatcher.RuntimePermissions;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 @RuntimePermissions
 public class MainActivity extends AppCompatActivity {
@@ -75,6 +79,9 @@ public class MainActivity extends AppCompatActivity {
     private int size = 10;
 
     private Store store;
+    private CompositeSubscription subscriptions = new CompositeSubscription();
+    private FullscreenProgressDialog progressDialog;
+    private SimpleImageCreator creator;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -82,7 +89,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        progressDialog = new FullscreenProgressDialog(this);
         store = new Store(this);
+
+        creator = new SimpleImageCreator(this) {
+            @Override
+            protected LocalDateTime getExifLocalDateTime() {
+                return LocalDateTime.of(
+                        target.getYear(),
+                        target.getMonth(),
+                        target.getDayOfMonth(),
+                        target.getHour(),
+                        target.getMinute());
+            }
+
+            @Override
+            protected int getBulkCreateSize() {
+                return size;
+            }
+        };
 
         target = LocalDateTime.now().atZone(ZoneId.systemDefault());
         dateTextView.setText(createDateDescriptionText());
@@ -192,38 +217,37 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    @Override
+    protected void onDestroy() {
+        progressDialog.dismiss();
+        subscriptions.unsubscribe();
+        super.onDestroy();
+    }
+
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     void createImage() {
-        new SimpleImageCreator(this, new Creator.OnCreateListener() {
-            @Override
-            public void onStartCreateImage() {
-            }
+        progressDialog.show();
 
-            @Override
-            public void onFinishCreateImage(String path, Uri uri) {
-                new android.os.Handler(Looper.getMainLooper()).post(new Runnable() {
+        subscriptions.add(creator.bulkCreate()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<Pair<String, Uri>>() {
                     @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this, "画像作成が完了しました", Toast.LENGTH_SHORT).show();
+                    public void onCompleted() {
+                        Log.d(TAG, "onCompleted: ");
+                        progressDialog.dismiss();
                     }
-                });
-            }
-        }) {
-            @Override
-            protected LocalDateTime getExifLocalDateTime() {
-                return LocalDateTime.of(
-                        target.getYear(),
-                        target.getMonth(),
-                        target.getDayOfMonth(),
-                        target.getHour(),
-                        target.getMinute());
-            }
 
-            @Override
-            protected int getBulkCreateSize() {
-                return size;
-            }
-        }.bulkCreate();
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(Pair<String, Uri> stringUriPair) {
+                        Log.d(TAG, "onNext: ");
+                    }
+                }));
     }
 
     @OnPermissionDenied(Manifest.permission.WRITE_EXTERNAL_STORAGE)
