@@ -143,18 +143,9 @@ public class MainActivity extends AppCompatActivity {
             colorPreviewBackground.setBackgroundResource(R.color.colorPrimary);
         }
 
-        final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item);
-        adapter.add("1");
-        adapter.add("5");
-        adapter.add("10");
-        adapter.add("15");
-        adapter.add("20");
-        adapter.add("25");
-        adapter.add("30");
-        adapter.add("35");
-        adapter.add("40");
-        adapter.add("45");
-        adapter.add("50");
+        // 枚数設定
+        String[] arr = getResources().getStringArray(R.array.bulk_size);
+        final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, arr);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -184,10 +175,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.edit_created_sample_images_date)
     void onClickChangeImageDateButton() {
-        showDatePicker();
-    }
-
-    private void showDatePicker() {
+        // Show date picker
         final ZonedDateTime localDateTime = LocalDateTime.now().atZone(ZoneId.systemDefault());
         final DatePickerDialog dialog = new DatePickerDialog(this, R.style.Theme_SampleImage_Dialog_Alert,
                 new DatePickerDialog.OnDateSetListener() {
@@ -289,6 +277,16 @@ public class MainActivity extends AppCompatActivity {
         MainActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
+    @OnClick(R.id.edit_created_sample_images_background_color)
+    void onClickChangeTextColorButton() {
+        showColorPickerDialog(findViewById(R.id.edit_created_sample_images_background_color));
+    }
+
+    @OnClick(R.id.edit_created_sample_images_text_color)
+    void onClickChangeBackgroundColorButton() {
+        showColorPickerDialog(findViewById(R.id.edit_created_sample_images_text_color));
+    }
+
     private void showColorPickerDialog(final View view) {
         new SpectrumDialog.Builder(this)
                 .setTitle("色を選んでね")
@@ -315,13 +313,4 @@ public class MainActivity extends AppCompatActivity {
                 }).build().show(MainActivity.this.getSupportFragmentManager(), "dialog_demo_4");
     }
 
-    @OnClick(R.id.edit_created_sample_images_background_color)
-    void onClickChangeTextColorButton() {
-        showColorPickerDialog(findViewById(R.id.edit_created_sample_images_background_color));
-    }
-
-    @OnClick(R.id.edit_created_sample_images_text_color)
-    void onClickChangeBackgroundColorButton() {
-        showColorPickerDialog(findViewById(R.id.edit_created_sample_images_text_color));
-    }
 }

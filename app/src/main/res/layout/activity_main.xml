@@ -83,7 +83,8 @@
                         android:id="@+id/created_sample_images_count_spinner"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="right|end" />
+                        android:layout_gravity="right|end"
+                        android:spinnerMode="dropdown" />
                 </LinearLayout>
             </LinearLayout>
 
