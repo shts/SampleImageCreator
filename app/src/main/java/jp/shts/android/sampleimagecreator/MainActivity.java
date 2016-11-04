@@ -91,8 +91,24 @@ public class MainActivity extends AppCompatActivity {
 
         progressDialog = new FullscreenProgressDialog(this);
         store = new Store(this);
-
         creator = new SimpleImageCreator(this) {
+
+            @Override
+            protected int getBackgroundColor() {
+                if (store.checkedBackgroundColor()) {
+                    return store.backgroundColor();
+                }
+                return super.getBackgroundColor();
+            }
+
+            @Override
+            protected int getPaintColor() {
+                if (store.checkedTextColor()) {
+                    return store.textColor();
+                }
+                return super.getPaintColor();
+            }
+
             @Override
             protected LocalDateTime getExifLocalDateTime() {
                 return LocalDateTime.of(
@@ -224,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onCompleted() {
                         Log.d(TAG, "onCompleted: ");
                         progressDialog.dismiss();
+                        Toast.makeText(MainActivity.this, "作成が完了しました", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -279,12 +296,12 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.edit_created_sample_images_background_color)
     void onClickChangeTextColorButton() {
-        showColorPickerDialog(findViewById(R.id.edit_created_sample_images_background_color));
+        showColorPickerDialog(findViewById(R.id.background_color_preview));
     }
 
     @OnClick(R.id.edit_created_sample_images_text_color)
     void onClickChangeBackgroundColorButton() {
-        showColorPickerDialog(findViewById(R.id.edit_created_sample_images_text_color));
+        showColorPickerDialog(findViewById(R.id.text_color_preview));
     }
 
     private void showColorPickerDialog(final View view) {
@@ -298,19 +315,20 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onColorSelected(boolean positiveResult, @ColorInt int color) {
                         if (positiveResult) {
-                            Toast.makeText(MainActivity.this, "Color selected: #" + Integer.toHexString(color).toUpperCase(), Toast.LENGTH_SHORT).show();
                             view.setBackgroundColor(color);
-                            if (view.getId() == R.id.edit_created_sample_images_background_color) {
+                            if (view.getId() == R.id.background_color_preview) {
                                 store.backgroundColor(color);
                             } else {
                                 store.textColor(color);
                             }
 
                         } else {
-                            Toast.makeText(MainActivity.this, "Dialog cancelled", Toast.LENGTH_SHORT).show();
+                            // Canceled
                         }
                     }
-                }).build().show(MainActivity.this.getSupportFragmentManager(), "dialog_demo_4");
+                })
+                .build()
+                .show(MainActivity.this.getSupportFragmentManager(), "showColorPickerDialog");
     }
 
 }

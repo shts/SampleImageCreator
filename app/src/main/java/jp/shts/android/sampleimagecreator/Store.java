@@ -31,7 +31,7 @@ public class Store {
     }
 
     void checkedTextColor(boolean checked) {
-        pref.edit().putBoolean(KEY_ENABLE_TEXT_COLOR, false).apply();
+        pref.edit().putBoolean(KEY_ENABLE_TEXT_COLOR, checked).apply();
     }
 
     @ColorInt
