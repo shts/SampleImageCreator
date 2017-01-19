@@ -9,11 +9,11 @@ import android.widget.TextView;
 /**
  * 通信時用プログレス
  */
-public class FullscreenProgressDialog extends Dialog {
+class FullscreenProgressDialog extends Dialog {
 
     private int progressMessageResId;
 
-    public FullscreenProgressDialog(Context context) {
+    FullscreenProgressDialog(Context context) {
         super(context, R.style.Theme_SampleImage_Dialog);
     }
 

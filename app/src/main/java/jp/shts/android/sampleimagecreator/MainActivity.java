@@ -33,7 +33,7 @@ import java.util.Locale;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import jp.shts.android.imagecreator.SimpleImageCreator;
+import jp.shts.android.sampleimagecreator.creator.SimpleImageCreator;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnNeverAskAgain;
 import permissions.dispatcher.OnPermissionDenied;
@@ -47,8 +47,6 @@ import rx.subscriptions.CompositeSubscription;
 
 @RuntimePermissions
 public class MainActivity extends AppCompatActivity {
-
-    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Bind(R.id.created_sample_images_date)
     TextView dateTextView;
@@ -191,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.edit_created_sample_images_date)
     void onClickChangeImageDateButton() {
         // Show date picker
-        final DatePickerDialog dialog = new DatePickerDialog(this, R.style.Theme_SampleImage_Dialog_Alert,
+        DatePickerDialog dialog = new DatePickerDialog(this, R.style.Theme_SampleImage_Dialog_Alert,
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
@@ -242,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Throwable e) {
+                        progressDialog.dismiss();
                         Toast.makeText(MainActivity.this, "エラーが発生しました", Toast.LENGTH_SHORT).show();
                     }
 
@@ -317,7 +316,6 @@ public class MainActivity extends AppCompatActivity {
                             } else {
                                 store.textColor(color);
                             }
-
                         } else {
                             // Canceled
                         }

@@ -37,9 +37,6 @@ dependencies {
     // ButterKnife
     compile 'com.jakewharton:butterknife:7.0.1'
 
-    // SampleImageCreator
-    compile project(':imagecreator')
-
     // https://github.com/hotchemi/PermissionsDispatcher
     compile 'com.github.hotchemi:permissionsdispatcher:2.1.2'
     apt 'com.github.hotchemi:permissionsdispatcher-processor:2.1.2'

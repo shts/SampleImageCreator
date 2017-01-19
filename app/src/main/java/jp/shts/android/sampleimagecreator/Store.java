@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.ColorInt;
 
-public class Store {
+class Store {
 
     private static final String KEY_ENABLE_BACKGROUND_COLOR = "key_background_color_enable";
     private static final String KEY_ENABLE_TEXT_COLOR = "key_text_color_enable";

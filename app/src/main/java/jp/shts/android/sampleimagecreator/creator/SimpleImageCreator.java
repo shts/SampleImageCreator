@@ -1,4 +1,4 @@
-package jp.shts.android.imagecreator;
+package jp.shts.android.sampleimagecreator.creator;
 
 import android.content.Context;
 import android.graphics.Bitmap;
