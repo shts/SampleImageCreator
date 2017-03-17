@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Random;
 
-public class ImageCreator {
+class ImageCreator {
 
     private static final int IMAGE_WIDTH = 2000/*px*/;
     private static final int IMAGE_HEIGHT = 1500/*px*/;
@@ -49,7 +49,7 @@ public class ImageCreator {
         colors = new Colors(context);
     }
 
-    public void create() {
+    void create() {
         if (listener != null) listener.onStartCreateImage();
 
         Bitmap bitmap = createBaseBitmap();
@@ -71,17 +71,17 @@ public class ImageCreator {
 
     private OnCreateListener listener;
 
-    public void setOnCreateListener(OnCreateListener listener) {
+    void setOnCreateListener(OnCreateListener listener) {
         this.listener = listener;
     }
 
-    public void bulkCreate() {
+    void bulkCreate() {
         for (int i = 0; i < getBulkCreateSize(); i++) {
             create();
         }
     }
 
-    public void bulkCreate(int createSize) {
+    void bulkCreate(int createSize) {
         for (int i = 0; i < createSize; i++) {
             create();
         }

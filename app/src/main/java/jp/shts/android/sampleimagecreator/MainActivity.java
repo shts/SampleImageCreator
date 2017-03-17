@@ -3,6 +3,7 @@ package jp.shts.android.sampleimagecreator;
 import android.Manifest;
 import android.app.DatePickerDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
@@ -11,11 +12,15 @@ import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.Preference;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -29,11 +34,14 @@ import org.threeten.bp.ZonedDateTime;
 import org.threeten.bp.format.DateTimeFormatter;
 
 import java.util.Locale;
+import java.util.prefs.PreferenceChangeEvent;
+import java.util.prefs.PreferenceChangeListener;
+import java.util.zip.Inflater;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import jp.shts.android.sampleimagecreator.creator.SimpleImageCreator;
+import jp.shts.android.sampleimagecreator.creator.CustomImageCreator;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnNeverAskAgain;
 import permissions.dispatcher.OnPermissionDenied;
@@ -44,6 +52,8 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
+
+import static jp.shts.android.sampleimagecreator.Store.KEY_DIRNAME;
 
 @RuntimePermissions
 public class MainActivity extends AppCompatActivity {
@@ -71,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.background_color_preview)
     View colorPreviewBackground;
 
+    @Bind(R.id.dirname_text)
+    TextView editDirname;
+
     ZonedDateTime target;
 
     private int size = 10;
@@ -78,7 +91,17 @@ public class MainActivity extends AppCompatActivity {
     private Store store;
     private CompositeSubscription subscriptions = new CompositeSubscription();
     private FullscreenProgressDialog progressDialog;
-    private SimpleImageCreator creator;
+    private CustomImageCreator creator;
+
+    private SharedPreferences.OnSharedPreferenceChangeListener l
+            = new SharedPreferences.OnSharedPreferenceChangeListener() {
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            if (KEY_DIRNAME.equals(key)) {
+                editDirname.setText(store.dirname());
+            }
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -88,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
         progressDialog = new FullscreenProgressDialog(this);
         store = new Store(this);
-        creator = new SimpleImageCreator(this) {
+        creator = new CustomImageCreator(this) {
 
             @Override
             protected int getBackgroundColor() {
@@ -175,6 +198,10 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        editDirname.setText(store.dirname());
+
+        store.pref().registerOnSharedPreferenceChangeListener(l);
     }
 
     private String createDateDescriptionText() {
@@ -219,6 +246,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        store.pref().unregisterOnSharedPreferenceChangeListener(l);
         progressDialog.dismiss();
         subscriptions.unsubscribe();
         super.onDestroy();
@@ -325,4 +353,22 @@ public class MainActivity extends AppCompatActivity {
                 .show(MainActivity.this.getSupportFragmentManager(), "showColorPickerDialog");
     }
 
+    @OnClick(R.id.edit_dirname)
+    void onClickEditDirname() {
+        ViewGroup vg = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.edit_dirname, null);
+        final EditText et = (EditText) vg.findViewById(R.id.editor);
+        et.setText(store.dirname());
+        new AlertDialog.Builder(this)
+                .setTitle("保存先のディレクトリ名を入力してください")
+                .setView(vg)
+                .setPositiveButton("設定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        store.dirname(et.getText().toString());
+                    }
+                })
+                .setNegativeButton("キャンセル", null)
+                .create()
+                .show();
+    }
 }

@@ -1,21 +1,27 @@
 package jp.shts.android.sampleimagecreator;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.ColorInt;
 
-class Store {
+public class Store {
 
     private static final String KEY_ENABLE_BACKGROUND_COLOR = "key_background_color_enable";
     private static final String KEY_ENABLE_TEXT_COLOR = "key_text_color_enable";
     private static final String KEY_BACKGROUND_COLOR = "key_background_color";
     private static final String KEY_TEXT_COLOR = "key_text_color";
+    public static final String KEY_DIRNAME = "key_dirname";
 
     private final SharedPreferences pref;
 
-    Store(Context context) {
+    public Store(Context context) {
         this.pref = PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public SharedPreferences pref() {
+        return pref;
     }
 
     boolean checkedBackgroundColor() {
@@ -50,5 +56,14 @@ class Store {
 
     void textColor(@ColorInt int color) {
         pref.edit().putInt(KEY_TEXT_COLOR, color).apply();
+    }
+
+    @SuppressLint("CommitPrefEdits")
+    public void dirname(String dirname) {
+        pref.edit().putString(KEY_DIRNAME, dirname).commit();
+    }
+
+    public String dirname() {
+        return pref.getString(KEY_DIRNAME, "random");
     }
 }

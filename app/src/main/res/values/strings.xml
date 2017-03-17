@@ -3,6 +3,7 @@
     <string name="need_write_external_permission">このアプリはストレージへの書き込み権限が必要です。</string>
     <string-array name="bulk_size">
         <item>1</item>
+        <item>4</item>
         <item>5</item>
         <item>10</item>
         <item>15</item>

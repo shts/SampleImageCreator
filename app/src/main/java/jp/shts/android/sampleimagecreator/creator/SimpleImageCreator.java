@@ -13,10 +13,10 @@ import org.threeten.bp.LocalDateTime;
 import java.io.File;
 import java.util.Random;
 
-public class SimpleImageCreator extends Creator {
+class SimpleImageCreator extends Creator {
 
-    private static final int IMAGE_WIDTH = 2000/*px*/;
-    private static final int IMAGE_HEIGHT = 1500/*px*/;
+    static final int IMAGE_WIDTH = 2000/*px*/;
+    static final int IMAGE_HEIGHT = 1500/*px*/;
     private static final int DEFAULT_BULK_CREATE_SIZE = 10;
 
     private final Colors colors;
@@ -38,10 +38,13 @@ public class SimpleImageCreator extends Creator {
         Paint p = new Paint();
         p.setColor(getPaintColor());
 
-        float textSize = 500;
-        p.setTextSize(textSize);
-        canvas.drawText(randomText(), (IMAGE_WIDTH / 2) - textSize, (IMAGE_HEIGHT / 2), p);
+        p.setTextSize(getTextSize());
+        canvas.drawText(getText(), (IMAGE_WIDTH / 2) - getTextSize(), (IMAGE_HEIGHT / 2), p);
         canvas.save();
+    }
+
+    protected float getTextSize() {
+        return 500;
     }
 
     @ColorInt
@@ -65,7 +68,7 @@ public class SimpleImageCreator extends Creator {
         if (dir == null) {
             return null;
         }
-        final File randomDir = new File(dir, "random");
+        final File randomDir = new File(dir, dirname());
         // ディレクトリじゃない同名ファイルがあれば削除
         if (randomDir.exists() && !randomDir.isDirectory()) {
             if (!randomDir.delete()) {
@@ -78,6 +81,10 @@ public class SimpleImageCreator extends Creator {
             }
         }
         return randomDir;
+    }
+
+    protected String dirname() {
+        return "random";
     }
 
     @Override
@@ -97,7 +104,7 @@ public class SimpleImageCreator extends Creator {
             "V", "W", "X", "Y", "Z"
     };
 
-    private String randomText() {
+    protected String getText() {
         Random r = new Random();
         String c = ALPHABET[r.nextInt(ALPHABET.length - 1)];
         int i = r.nextInt(99);
@@ -107,5 +114,4 @@ public class SimpleImageCreator extends Creator {
             return c + "0" + String.valueOf(i);
         }
     }
-
 }
