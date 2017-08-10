@@ -76,6 +76,30 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:text="作成する画像の時間を変更する"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+
+                    <Button
+                        android:id="@+id/edit_created_sample_images_time"
+                        style="@style/Widget.SampleImage.Button.Borderless.Light"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right|end"
+                        android:text="変更" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="作成する画像の枚数を変更する"
                         android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 

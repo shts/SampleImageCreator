@@ -2,6 +2,7 @@ package jp.shts.android.sampleimagecreator;
 
 import android.Manifest;
 import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -12,8 +13,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.preference.Preference;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -24,6 +28,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.thebluealliance.spectrum.SpectrumDialog;
@@ -33,15 +38,15 @@ import org.threeten.bp.ZoneId;
 import org.threeten.bp.ZonedDateTime;
 import org.threeten.bp.format.DateTimeFormatter;
 
+import java.util.Arrays;
 import java.util.Locale;
-import java.util.prefs.PreferenceChangeEvent;
-import java.util.prefs.PreferenceChangeListener;
-import java.util.zip.Inflater;
+import java.util.Random;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import jp.shts.android.sampleimagecreator.creator.CustomImageCreator;
+import jp.shts.android.sampleimagecreator.creator.DateTimeImageCreator;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnNeverAskAgain;
 import permissions.dispatcher.OnPermissionDenied;
@@ -131,12 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected LocalDateTime getExifLocalDateTime() {
-                return LocalDateTime.of(
-                        target.getYear(),
-                        target.getMonth(),
-                        target.getDayOfMonth(),
-                        target.getHour(),
-                        target.getMinute());
+                return target.toLocalDateTime();
             }
 
             @Override
@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String formatString(ZonedDateTime localDateTime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.getDefault());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm", Locale.getDefault());
         return localDateTime.format(formatter);
     }
 
@@ -220,12 +220,26 @@ public class MainActivity extends AppCompatActivity {
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                        target = LocalDateTime.of(year, (monthOfYear + 1), dayOfMonth, 0, 0, 0, 0).atZone(ZoneId.systemDefault());
+                        Log.d(MainActivity.class.getSimpleName(), "onDateSet: year(" + year + ") monthOfYear(" + monthOfYear + ") dayOfMonth(" + dayOfMonth + ")");
+                        target = target.withYear(year).withMonth(monthOfYear + 1).withDayOfMonth(dayOfMonth);
                         dateTextView.setText(createDateDescriptionText());
                     }
                 },
                 target.getYear(), target.getMonthValue() - 1, target.getDayOfMonth());
         dialog.show();
+    }
+
+    @OnClick(R.id.edit_created_sample_images_time)
+    void onClickChangeImageTimeButton() {
+        // Show time picker
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this, new TimePickerDialog.OnTimeSetListener() {
+            @Override
+            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                target = target.withHour(hourOfDay).withMinute(minute);
+                dateTextView.setText(createDateDescriptionText());
+            }
+        }, target.getHour(), target.getMinute(), true);
+        timePickerDialog.show();
     }
 
     @OnClick(R.id.create_image)
@@ -370,5 +384,57 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("キャンセル", null)
                 .create()
                 .show();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        createRandomAtOneDay();
+        return true;
+    }
+
+    // 15枚
+    private void createRandomAtOneDay() {
+        DateTimeImageCreator d = new DateTimeImageCreator(this);
+        d.setData(Arrays.asList(
+                randomTime(), randomTime(), randomTime(), randomTime(),
+                randomTime(), randomTime(), randomTime(), randomTime(),
+                randomTime(), randomTime(), randomTime(), randomTime(),
+                randomTime(), randomTime(), randomTime(), randomTime()));
+        progressDialog.show();
+        subscriptions.add(d.bulkCreate()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<Pair<String, Uri>>() {
+                    @Override
+                    public void onCompleted() {
+                        progressDialog.dismiss();
+                        Toast.makeText(MainActivity.this, "作成が完了しました", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        progressDialog.dismiss();
+                        Toast.makeText(MainActivity.this, "エラーが発生しました", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(Pair<String, Uri> stringUriPair) {
+                    }
+                }));
+    }
+
+    private ZonedDateTime randomTime() {
+        Random r = new Random();
+        int hours = r.nextInt(24);
+        int minutes = r.nextInt(60);
+        return target.withHour(hours).withMinute(minutes);
     }
 }

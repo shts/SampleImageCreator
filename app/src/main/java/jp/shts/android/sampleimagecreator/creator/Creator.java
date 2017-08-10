@@ -8,6 +8,7 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
+import android.util.Log;
 
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.format.DateTimeFormatter;
@@ -93,8 +94,9 @@ abstract class Creator {
 
     private void addDateTimeAsExif(File file) {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss", Locale.ENGLISH);
             String formattedDateTime = getExifLocalDateTime().format(formatter);
+            Log.d(Creator.class.getSimpleName(), "addDateTimeAsExif: formattedDateTime(" + formattedDateTime + ")");
             ExifInterface exifInterface = new ExifInterface(file.getAbsolutePath());
             exifInterface.setAttribute(ExifInterface.TAG_DATETIME, formattedDateTime);
             exifInterface.saveAttributes();
